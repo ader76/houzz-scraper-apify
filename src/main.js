@@ -1,4 +1,6 @@
-const Apify = require('apify');
+- const Apify = require('apify');
++ import Apify from 'apify';
+
 
 Apify.main(async () => {
     // Prepare RequestList from input
