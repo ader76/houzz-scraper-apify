@@ -15,7 +15,7 @@ const crawler = new PlaywrightCrawler({
 
         await page.waitForLoadState('domcontentloaded');
 
-        const items = await page.$$eval('.hz-pro-search-results__tile', cards => {
+        const items = await page.$$eval('.hz-pro-search-results__item', cards => {
             return cards.map(card => {
                 const name = card.querySelector('.hz-pro-search-results__name')?.innerText ?? null;
                 const location = card.querySelector('.hz-pro-search-results__location')?.innerText ?? null;
