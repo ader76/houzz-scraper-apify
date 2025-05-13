@@ -1,29 +1,36 @@
 {
-  "title": "Houzz Scraper Input",
+  "title": "Scraper Input",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
     "location": {
-      "title": "Location (city, state)",
+      "title": "City / State or ZIP",
       "type": "string",
       "editor": "textfield",
-      "description": "City and state (e.g. Cambridge, MD) or ZIP code.",
+      "description": "Example: Cambridge, MD  or  21613",
       "default": "Cambridge, MD"
     },
     "keyword": {
-      "title": "Search keyword",
+      "title": "Trade keyword",
       "type": "string",
       "editor": "textfield",
-      "description": "Profession you’re searching for (e.g. general contractor).",
+      "description": "Example: general contractor, roofer, plumber",
       "default": "general contractor"
     },
     "maxPages": {
-      "title": "Max pages",
+      "title": "Pages to crawl",
       "type": "integer",
       "editor": "number",
-      "description": "How many Houzz result pages to crawl (≥1).",
+      "description": "How many result pages to crawl (≥ 1).",
       "default": 3
+    },
+    "cookieString": {
+      "title": "Optional cookies",
+      "type": "string",
+      "editor": "textfield",
+      "description": "Paste login cookies for sites that need auth.",
+      "default": ""
     }
   },
-  "required": ["location", "keyword"]
+  "required": ["location","keyword"]
 }
