@@ -1,4 +1,6 @@
+import * as Apify from 'apify';          // Apify.main, Apify.pushData, …
 import { PlaywrightCrawler } from 'crawlee';
+
 
 Apify.main(async () => {
     // Prepare RequestList from input
