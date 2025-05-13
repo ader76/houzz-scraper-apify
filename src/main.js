@@ -24,9 +24,18 @@ const crawler = new PlaywrightCrawler({
     async requestHandler({ page, request, log }) {
         log.info(`Processing: ${request.url}`);
 
-        await page.waitForLoadState('domcontentloaded');
+       await page.waitForLoadState('networkidle'); // wait until all content loads
+await page.waitForTimeout(3000); // wait extra time for dynamic content
 
-        const items = await page.$$eval('[data-testid="pro-search-result"]', cards => {
+const items = await page.$$eval('a[href*="/professional/"]', cards => {
+    return cards.map(card => {
+        const name = card.querySelector('h3')?.innerText || null;
+        const location = card.querySelector('[data-testid="pro-location"]')?.innerText || null;
+        const profileUrl = card.href ?? null;
+        return { name, location, profileUrl };
+    });
+});
+
             return cards.map(card => {
                 const name = card.querySelector('[data-testid="pro-search-result-name"]')?.innerText 
                           || card.querySelector('h3')?.innerText 
