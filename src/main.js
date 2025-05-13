@@ -16,19 +16,14 @@ const crawler = new PlaywrightCrawler({
         log.info(`Processing: ${request.url}`);
         await page.waitForLoadState('domcontentloaded');
 
-        const items = await page.$$eval('.hz-pro-search-results__item', cards => {
-            return cards.map(card => {
-                const name = card.querySelector('.hz-pro-search-results__name')?.innerText ?? null;
-                const location = card.querySelector('.hz-pro-search-results__location')?.innerText ?? null;
-                const profileUrl = card.querySelector('a')?.href ?? null;
-                return { name, location, profileUrl };
-            });
+        const items = await page.$$eval('a', anchors => {
+            return anchors
+                .map(a => a.href)
+                .filter(url => url.includes('/professional/') || url.includes('/pro/'));
         });
 
-        for (const item of items) {
-            if (item.name) {
-                await Actor.pushData(item);
-            }
+        for (const url of items) {
+            await Actor.pushData({ profileUrl: url });
         }
     },
     async failedRequestHandler({ request, log }) {
