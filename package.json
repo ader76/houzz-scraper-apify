@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Scrapes detailed contractor info from Houzz profile URLs.",
   "main": "src/main.js",
-  "scripts": { "start": "node src/main.js" },
+  "scripts": {
+    "start": "node src/main.js"
+  },
   "dependencies": {
     "apify": "^3.0.0",
     "crawlee": "^3.13.3"
