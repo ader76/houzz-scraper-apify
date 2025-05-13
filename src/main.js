@@ -5,7 +5,9 @@ await Actor.init();
 
 const { location = 'Cambridge, MD', keyword = 'general contractor', maxPages = 3 } = await Actor.getInput();
 
-const startUrl = `https://www.houzz.com/professionals/query=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`;
+const locationSlug = location.replace(/,\\s*/g, '--').replace(/\s+/g, '-');
+const startUrl = `https://www.houzz.com/professionals/${keyword.replace(/\s+/g, '-').toLowerCase()}/c/${locationSlug}`;
+
 
 const crawler = new PlaywrightCrawler({
     headless: true,
