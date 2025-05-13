@@ -1,14 +1,14 @@
 {
   "name": "houzz-scraper-playwright",
-  "version": "0.0.6",
-  "description": "Restored working version that scrapes contractor data from Houzz using Playwright.",
+  "version": "1.0.0",
+  "description": "Scrapes contractor profile URLs (and basic data) from Houzz.",
   "main": "src/main.js",
   "scripts": {
     "start": "node src/main.js"
   },
   "dependencies": {
     "apify": "^3.0.0",
-    "crawlee": "^3.6.1"
+    "crawlee": "^3.13.3"
   },
   "type": "module"
 }
