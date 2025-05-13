@@ -3,18 +3,18 @@ import { PlaywrightCrawler } from 'crawlee';
 
 await Actor.init();
 
-// Read input values from Apify
+// Get input from the user
 const {
     location = 'Cambridge, MD',
     keyword = 'general contractor',
     maxPages = 3
 } = await Actor.getInput();
 
-// Convert input to Houzz-friendly URL slug
+// Build slug for Houzz URL
 const locationSlug = location.replace(/,\s*/g, '--').replace(/\s+/g, '-');
 const keywordSlug = keyword.replace(/\s+/g, '-').toLowerCase();
 
-// Build the start URL
+// Construct Houzz search URL
 const startUrl = `https://www.houzz.com/professionals/${keywordSlug}/c/${locationSlug}`;
 
 const crawler = new PlaywrightCrawler({
@@ -22,31 +22,17 @@ const crawler = new PlaywrightCrawler({
     maxRequestsPerCrawl: maxPages,
 
     async requestHandler({ page, request, log }) {
-        log.info(`Processing: ${request.url}`);
+        log.info(`🔍 Processing: ${request.url}`);
 
-       await page.waitForLoadState('networkidle'); // wait until all content loads
-await page.waitForTimeout(3000); // wait extra time for dynamic content
+        // Wait for network + extra time for lazy loading
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(3000);
 
-const items = await page.$$eval('a[href*="/professional/"]', cards => {
-    return cards.map(card => {
-        const name = card.querySelector('h3')?.innerText || null;
-        const location = card.querySelector('[data-testid="pro-location"]')?.innerText || null;
-        const profileUrl = card.href ?? null;
-        return { name, location, profileUrl };
-    });
-});
-
+        const items = await page.$$eval('a[href*="/professional/"]', cards => {
             return cards.map(card => {
-                const name = card.querySelector('[data-testid="pro-search-result-name"]')?.innerText 
-                          || card.querySelector('h3')?.innerText 
-                          || null;
-
-                const location = card.querySelector('[data-testid="pro-location"]')?.innerText
-                               || card.querySelector('.hz-pro-search-results__location')?.innerText
-                               || null;
-
-                const profileUrl = card.querySelector('a')?.href ?? null;
-
+                const name = card.querySelector('h3')?.innerText || null;
+                const location = card.querySelector('[data-testid="pro-location"]')?.innerText || null;
+                const profileUrl = card.href ?? null;
                 return { name, location, profileUrl };
             });
         });
