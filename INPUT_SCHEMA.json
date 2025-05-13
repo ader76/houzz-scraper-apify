@@ -7,18 +7,21 @@
       "title": "Location (city, state)",
       "type": "string",
       "editor": "textfield",
+      "description": "City and state (e.g. Cambridge, MD) or ZIP code.",
       "default": "Cambridge, MD"
     },
     "keyword": {
       "title": "Search keyword",
       "type": "string",
       "editor": "textfield",
+      "description": "Profession you’re searching for (e.g. general contractor).",
       "default": "general contractor"
     },
     "maxPages": {
       "title": "Max pages",
       "type": "integer",
       "editor": "number",
+      "description": "How many Houzz result pages to crawl (≥1).",
       "default": 3
     }
   },
