@@ -3,25 +3,41 @@ import { PlaywrightCrawler } from 'crawlee';
 
 await Actor.init();
 
-const { location = 'Cambridge, MD', keyword = 'general contractor', maxPages = 3 } = await Actor.getInput();
+// Read input values from Apify
+const {
+    location = 'Cambridge, MD',
+    keyword = 'general contractor',
+    maxPages = 3
+} = await Actor.getInput();
 
-const locationSlug = location.replace(/,\\s*/g, '--').replace(/\s+/g, '-');
-const startUrl = `https://www.houzz.com/professionals/${keyword.replace(/\s+/g, '-').toLowerCase()}/c/${locationSlug}`;
+// Convert input to Houzz-friendly URL slug
+const locationSlug = location.replace(/,\s*/g, '--').replace(/\s+/g, '-');
+const keywordSlug = keyword.replace(/\s+/g, '-').toLowerCase();
 
+// Build the start URL
+const startUrl = `https://www.houzz.com/professionals/${keywordSlug}/c/${locationSlug}`;
 
 const crawler = new PlaywrightCrawler({
     headless: true,
     maxRequestsPerCrawl: maxPages,
+
     async requestHandler({ page, request, log }) {
         log.info(`Processing: ${request.url}`);
 
         await page.waitForLoadState('domcontentloaded');
 
-        const items = await page.$$eval('.hz-pro-search-results__item', cards => {
+        const items = await page.$$eval('[data-testid="pro-search-result"]', cards => {
             return cards.map(card => {
-                const name = card.querySelector('.hz-pro-search-results__name')?.innerText ?? null;
-                const location = card.querySelector('.hz-pro-search-results__location')?.innerText ?? null;
+                const name = card.querySelector('[data-testid="pro-search-result-name"]')?.innerText 
+                          || card.querySelector('h3')?.innerText 
+                          || null;
+
+                const location = card.querySelector('[data-testid="pro-location"]')?.innerText
+                               || card.querySelector('.hz-pro-search-results__location')?.innerText
+                               || null;
+
                 const profileUrl = card.querySelector('a')?.href ?? null;
+
                 return { name, location, profileUrl };
             });
         });
@@ -30,11 +46,11 @@ const crawler = new PlaywrightCrawler({
             await Actor.pushData(item);
         }
     },
+
     async failedRequestHandler({ request, log }) {
-        log.error(`Request failed: ${request.url}`);
+        log.error(`❌ Failed to load: ${request.url}`);
     }
 });
 
 await crawler.run([startUrl]);
-
 await Actor.exit();
