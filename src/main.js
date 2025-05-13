@@ -13,10 +13,12 @@ await Apify.Actor.init();
 const { profileUrls = [] } = (await Apify.Actor.getInput()) ?? {};
 if (!profileUrls.length) throw new Error('Input must contain "profileUrls".');
 
-const requestList = await Apify.Actor.openRequestList(
+- const requestList = await Apify.Actor.openRequestList(
++ const requestList = await Apify.openRequestList(
     'houzz-profiles',
     profileUrls.map(url => ({ url }))
 );
+
 
 /* ---------- crawler ---------- */
 const crawler = new PlaywrightCrawler({
