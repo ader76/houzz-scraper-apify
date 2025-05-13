@@ -31,16 +31,13 @@ const crawler = new PlaywrightCrawler({
             }
         });
 
-        const cards = page.locator('[data-testid="pro-search-result"]');
-
-        const items = await cards.evaluateAll(nodes =>
-            nodes.map(node => {
-                const name = node.querySelector('h3')?.innerText || null;
-                const location = node.querySelector('[data-testid="pro-location"]')?.innerText || null;
-                const profileUrl = node.querySelector('a')?.href || null;
-                return { name, location, profileUrl };
-            })
-        );
+        // Extract only the profile URLs from contractor tiles
+        const items = await page.$$eval('a[href*="/professional/"]', cards => {
+            return cards.map(card => {
+                const profileUrl = card.href ?? null;
+                return { profileUrl };
+            });
+        });
 
         console.log(`✅ Extracted ${items.length} items`);
 
