@@ -4,21 +4,18 @@ import { PlaywrightCrawler } from 'crawlee';
 await Actor.init();
 
 const {
-    zipCodes = [
-        "21613", "21677", "21835", "21648", "21622",
-        "21631", "21664", "21673", "21869", "21669",
-        "21626", "21654", "21675", "21643"
-    ],
+    location = 'Cambridge, MD',
     keyword = 'general contractor',
     maxPages = 3
 } = await Actor.getInput();
 
+const locationSlug = location.replace(/,\s*/g, '--').replace(/\s+/g, '-');
 const keywordSlug = keyword.replace(/\s+/g, '-').toLowerCase();
-const startUrls = zipCodes.map(zip => `https://www.houzz.com/professionals/${keywordSlug}/c/${zip}`);
+const startUrl = `https://www.houzz.com/professionals/${keywordSlug}/c/${locationSlug}`;
 
 const crawler = new PlaywrightCrawler({
     headless: true,
-    maxRequestsPerCrawl: maxPages * zipCodes.length,
+    maxRequestsPerCrawl: maxPages,
 
     async requestHandler({ page, request, log }) {
         log.info(`🔍 Visiting: ${request.url}`);
@@ -45,7 +42,7 @@ const crawler = new PlaywrightCrawler({
             })
         );
 
-        log.info(`✅ Extracted ${items.length} items`);
+        console.log(`✅ Extracted ${items.length} items`);
 
         for (const item of items) {
             await Actor.pushData(item);
@@ -57,5 +54,5 @@ const crawler = new PlaywrightCrawler({
     }
 });
 
-await crawler.run(startUrls);
+await crawler.run([startUrl]);
 await Actor.exit();
