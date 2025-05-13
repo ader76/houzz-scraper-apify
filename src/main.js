@@ -19,7 +19,6 @@ if (!profileUrls.length) throw new Error('Input must contain "profileUrls".');
     profileUrls.map(url => ({ url }))
 );
 
-
 /* ---------- crawler ---------- */
 const crawler = new PlaywrightCrawler({
     requestList,
