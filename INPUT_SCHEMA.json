@@ -7,23 +7,23 @@
       "title": "Location",
       "type": "string",
       "description": "City and state or ZIP (e.g. Cambridge, MD)",
+      "editor": "textfield",
       "default": "Cambridge, MD"
     },
     "keyword": {
       "title": "Search Keyword",
       "type": "string",
       "description": "What to search for (e.g. general contractor)",
+      "editor": "textfield",
       "default": "general contractor"
     },
     "maxPages": {
       "title": "Max Pages",
       "type": "integer",
       "description": "Maximum number of pages to scrape",
+      "editor": "number",
       "default": 3
     }
   },
-  "required": [
-    "location",
-    "keyword"
-  ]
+  "required": ["location", "keyword"]
 }
