@@ -1,0 +1,14 @@
+{
+  "name": "houzz-scraper-playwright",
+  "version": "0.2.0",
+  "description": "Scrapes general contractor data from Houzz using Playwright.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.0.0",
+    "crawlee": "^3.6.1"
+  },
+  "type": "module"
+}
