@@ -1,4 +1,3 @@
-
 import { Actor } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
 
@@ -11,15 +10,16 @@ const startUrl = `https://www.houzz.com/professionals/query=${encodeURIComponent
 const crawler = new PlaywrightCrawler({
     headless: true,
     maxRequestsPerCrawl: maxPages,
-    async requestHandler({ page, request, enqueueLinks, log }) {
+    async requestHandler({ page, request, log }) {
         log.info(`Processing: ${request.url}`);
+
         await page.waitForLoadState('domcontentloaded');
 
-        const items = await page.$$eval('.hz-pro-search-results__content .hz-pro-search-results__tile', cards => {
+        const items = await page.$$eval('.hz-pro-search-results__tile', cards => {
             return cards.map(card => {
-                const name = card.querySelector('.hz-pro-search-results__name')?.innerText || null;
-                const location = card.querySelector('.hz-pro-search-results__location')?.innerText || null;
-                const profileUrl = card.querySelector('a')?.href || null;
+                const name = card.querySelector('.hz-pro-search-results__name')?.innerText ?? null;
+                const location = card.querySelector('.hz-pro-search-results__location')?.innerText ?? null;
+                const profileUrl = card.querySelector('a')?.href ?? null;
                 return { name, location, profileUrl };
             });
         });
@@ -27,6 +27,9 @@ const crawler = new PlaywrightCrawler({
         for (const item of items) {
             await Actor.pushData(item);
         }
+    },
+    async failedRequestHandler({ request, log }) {
+        log.error(`Request failed: ${request.url}`);
     }
 });
 
