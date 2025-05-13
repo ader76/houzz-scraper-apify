@@ -1,11 +1,9 @@
 {
-  "name": "houzz-scraper-playwright",
+  "name": "contractor-scraper-playwright",
   "version": "1.0.0",
-  "description": "Scrapes contractor profile URLs (and basic data) from Houzz.",
+  "description": "Scrapes contractor profiles from one marketplace with Playwright.",
   "main": "src/main.js",
-  "scripts": {
-    "start": "node src/main.js"
-  },
+  "scripts": { "start": "node src/main.js" },
   "dependencies": {
     "apify": "^3.0.0",
     "crawlee": "^3.13.3"
