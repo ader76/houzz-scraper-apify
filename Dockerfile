@@ -1,4 +1,3 @@
-# Playwright-Chrome image required for Houzz
 FROM apify/actor-node-playwright-chrome
 
 COPY . ./
