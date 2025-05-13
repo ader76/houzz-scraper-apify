@@ -4,44 +4,46 @@ import { PlaywrightCrawler } from 'crawlee';
 await Actor.init();
 
 const {
-    location = 'Cambridge, MD',
+    zipCodes = [
+        "21613", "21677", "21835", "21648", "21622",
+        "21631", "21664", "21673", "21869", "21669",
+        "21626", "21654", "21675", "21643"
+    ],
     keyword = 'general contractor',
-    maxPages = 1
+    maxPages = 3
 } = await Actor.getInput();
 
-// Convert location and keyword into URL-safe slugs
-const locationSlug = location.replace(/,\s*/g, '--').replace(/\s+/g, '-');
 const keywordSlug = keyword.replace(/\s+/g, '-').toLowerCase();
-const startUrl = `https://www.houzz.com/professionals/${keywordSlug}/c/${locationSlug}`;
+const startUrls = zipCodes.map(zip => `https://www.houzz.com/professionals/${keywordSlug}/c/${zip}`);
 
 const crawler = new PlaywrightCrawler({
     headless: true,
-    maxRequestsPerCrawl: maxPages,
+    maxRequestsPerCrawl: maxPages * zipCodes.length,
 
     async requestHandler({ page, request, log }) {
         log.info(`🔍 Visiting: ${request.url}`);
 
-        // Wait until key elements are loaded
-        await page.waitForSelector('div[data-testid="pro-search-result"]');
-        await page.waitForTimeout(2000); // Allow lazy content to render
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(2000);
 
-        // Scroll to load more results
+        // Scroll deeply to trigger lazy loading
         await page.evaluate(async () => {
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 15; i++) {
                 window.scrollBy(0, 1500);
                 await new Promise(res => setTimeout(res, 500));
             }
         });
 
-        // Extract contractor data
-        const items = await page.$$eval('div[data-testid="pro-search-result"]', cards => {
-            return cards.map(card => {
-                const name = card.querySelector('div[data-testid="pro-search-result-name"]')?.innerText?.trim() || null;
-                const location = card.querySelector('div[data-testid="pro-location"]')?.innerText?.trim() || null;
-                const profileUrl = card.querySelector('a')?.href || null;
+        const cards = page.locator('[data-testid="pro-search-result"]');
+
+        const items = await cards.evaluateAll(nodes =>
+            nodes.map(node => {
+                const name = node.querySelector('h3')?.innerText || null;
+                const location = node.querySelector('[data-testid="pro-location"]')?.innerText || null;
+                const profileUrl = node.querySelector('a')?.href || null;
                 return { name, location, profileUrl };
-            });
-        });
+            })
+        );
 
         log.info(`✅ Extracted ${items.length} items`);
 
@@ -55,5 +57,5 @@ const crawler = new PlaywrightCrawler({
     }
 });
 
-await crawler.run([startUrl]);
+await crawler.run(startUrls);
 await Actor.exit();
