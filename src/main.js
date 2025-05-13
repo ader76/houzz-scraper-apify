@@ -5,8 +5,8 @@ await Actor.init();
 
 const { location = 'Cambridge, MD', keyword = 'general contractor', maxPages = 3 } = await Actor.getInput();
 
-const locationSlug = location.replace(/,\s*/g, '--').replace(/\s+/g, '-');
-const keywordSlug = keyword.replace(/\s+/g, '-').toLowerCase();
+const locationSlug = location.replace(/,\\s*/g, '--').replace(/\\s+/g, '-');
+const keywordSlug = keyword.replace(/\\s+/g, '-').toLowerCase();
 const startUrl = `https://www.houzz.com/professionals/${keywordSlug}/c/${locationSlug}`;
 
 const crawler = new PlaywrightCrawler({
@@ -14,12 +14,31 @@ const crawler = new PlaywrightCrawler({
     maxRequestsPerCrawl: maxPages,
     async requestHandler({ page, request, log }) {
         log.info(`Processing: ${request.url}`);
-        await page.waitForLoadState('domcontentloaded');
+        await page.waitForLoadState('networkidle');
+
+        // Scroll to the bottom slowly to trigger dynamic loading
+        await page.evaluate(async () => {
+            await new Promise(resolve => {
+                let totalHeight = 0;
+                const distance = 500;
+                const timer = setInterval(() => {
+                    window.scrollBy(0, distance);
+                    totalHeight += distance;
+
+                    if (totalHeight >= document.body.scrollHeight) {
+                        clearInterval(timer);
+                        resolve();
+                    }
+                }, 300);
+            });
+        });
+
+        await page.waitForTimeout(3000); // Let dynamic content render
 
         const items = await page.$$eval('a', anchors => {
             return anchors
                 .map(a => a.href)
-                .filter(url => url.includes('/professional/') || url.includes('/pro/'));
+                .filter(url => url.includes('/pro/') || url.includes('/professional/'));
         });
 
         for (const url of items) {
