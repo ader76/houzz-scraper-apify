@@ -1,71 +1,75 @@
-/*****************************************************************
- *  Houzz Contractor Profile Scraper
- *  Input : { "profileUrls": [ "https://www.houzz.com/pro/...", … ] }
- *  Output: dataset → name, location, phone, email, website, licenseNumber,
- *                     profileUrl, source="Houzz"
- *****************************************************************/
-import * as Apify from 'apify';
+import { Actor } from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
 
-await Apify.Actor.init();
+await Actor.init();
 
-/* ---------- read input ---------- */
-const { profileUrls = [] } = (await Apify.Actor.getInput()) ?? {};
-if (!profileUrls.length) throw new Error('Input must contain "profileUrls".');
+// 1. Read and validate input
+const input = await Actor.getInput() || {};
+const urls = input.profileUrls;
+if (!Array.isArray(urls) || urls.length === 0) {
+    throw new Error('Input must contain "profileUrls": [ "https://www.houzz.com/pro/…", … ]');
+}
 
-- const requestList = await Apify.Actor.openRequestList(
-+ const requestList = await Apify.openRequestList(
+// 2. Build a RequestList from those URLs
+const requestList = await Actor.openRequestList(
     'houzz-profiles',
-    profileUrls.map(url => ({ url }))
+    urls.map(u => ({ url: u }))
 );
 
-/* ---------- crawler ---------- */
+// 3. Create the crawler
 const crawler = new PlaywrightCrawler({
     requestList,
     headless: true,
     preNavigationHooks: [
-        async (_ctx, gotoOpts) => { gotoOpts.waitUntil = 'networkidle'; }
+        async (_ctx, gotoOptions) => {
+            gotoOptions.waitUntil = 'networkidle';
+        }
     ],
     handlePageFunction: async ({ page, request, log }) => {
-        log.info(`▶ ${request.url}`);
+        log.info(`▶ Scraping ${request.url}`);
 
-        /* ---- NAME ---- */
-        let name = await page.$eval('h1', h => h.textContent.trim()).catch(() => null);
+        // --- Name ---
+        let name = await page.$eval('h1', el => el.textContent.trim()).catch(() => null);
         if (!name) {
-            const t = await page.title();
-            name = t.includes(' - ') ? t.split(' - ')[0].trim() : t.trim();
+            const title = await page.title();
+            name = title.includes(' - ') ? title.split(' - ')[0].trim() : title.trim();
         }
 
-        /* ---- LOCATION ---- */
+        // --- Location ---
         let location = await page.$eval(
             'xpath=//h3[contains(text(),"Address")]/following-sibling::*[1]',
             el => el.innerText.trim()
         ).catch(() => null);
-        if (location) location = location.replace(/\s*\n\s*/g, ', ').replace(/,\s*,/g, ',').trim();
-        else {
-            const t = await page.title();
-            const m = t.match(/[^-]+ - ([^|]+)/);
-            if (m) location = m[1].replace(/\s*US$/, '').trim();
+        if (location) {
+            location = location
+                .replace(/\s*\n\s*/g, ', ')
+                .replace(/,\s*,/g, ',')
+                .trim();
+        } else {
+            // fallback: look for city, state in title
+            const title = await page.title();
+            const m = title.match(/,\s*[A-Z]{2}/);
+            location = m ? title.slice(title.indexOf(m[0]) - 20, title.indexOf('|')).trim() : null;
         }
 
-        /* ---- PHONE ---- */
+        // --- Phone ---
         let phone = await page.$eval(
             'xpath=//h3[contains(text(),"Phone")]/following-sibling::*[1]',
             el => el.textContent.trim()
         ).catch(() => null);
         if (!phone) {
             phone = await page.$eval('a[href^="tel:"]',
-                a => a.getAttribute('href').replace(/^tel:/,'')
+                a => a.getAttribute('href').replace(/^tel:/, '').trim()
             ).catch(() => null);
         }
 
-        /* ---- EMAIL ---- */
+        // --- Email ---
         const email = await page.$eval(
             'a[href^="mailto:"]',
-            a => a.getAttribute('href').replace(/^mailto:/,'')
+            a => a.getAttribute('href').replace(/^mailto:/, '').trim()
         ).catch(() => null);
 
-        /* ---- WEBSITE ---- */
+        // --- Website ---
         let website = await page.$eval(
             'xpath=//h3[contains(text(),"Website")]/following-sibling::*[1]//a',
             a => a.href
@@ -73,17 +77,19 @@ const crawler = new PlaywrightCrawler({
         if (website) {
             const m = website.match(/trk\/([^/]+)\//);
             if (m) {
-                try { website = Buffer.from(m[1], 'base64').toString('utf-8'); } catch {}
+                try { website = Buffer.from(m[1], 'base64').toString('utf-8'); }
+                catch {}
             }
         }
 
-        /* ---- LICENSE ---- */
+        // --- License ---
         const licenseNumber = await page.$eval(
             'xpath=//h3[contains(text(),"License")]/following-sibling::*[1]',
             el => el.textContent.trim()
         ).catch(() => null);
 
-        await Apify.Actor.pushData({
+        // --- Push data ---
+        await Actor.pushData({
             name,
             location,
             phone,
@@ -94,12 +100,15 @@ const crawler = new PlaywrightCrawler({
             source: 'Houzz'
         });
     },
-
     handleFailedRequestFunction: async ({ request, error }) => {
-        await Apify.Actor.pushData({ profileUrl: request.url, error: error.message, source: 'Houzz' });
+        await Actor.pushData({
+            profileUrl: request.url,
+            error: error.message,
+            source: 'Houzz'
+        });
     }
 });
 
-/* ---------- run ---------- */
+// 4. Run the crawler
 await crawler.run();
-await Apify.Actor.exit();
+await Actor.exit();
