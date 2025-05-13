@@ -1,4 +1,3 @@
-import Apify from 'apify';
 import { PlaywrightCrawler } from 'crawlee';
 
 Apify.main(async () => {
