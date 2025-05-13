@@ -1,36 +1,15 @@
 {
-  "title": "Scraper Input",
+  "title": "Houzz Profile Scraper Input",
   "type": "object",
   "schemaVersion": 1,
   "properties": {
-    "location": {
-      "title": "City / State or ZIP",
-      "type": "string",
-      "editor": "textfield",
-      "description": "Example: Cambridge, MD  or  21613",
-      "default": "Cambridge, MD"
-    },
-    "keyword": {
-      "title": "Trade keyword",
-      "type": "string",
-      "editor": "textfield",
-      "description": "Example: general contractor, roofer, plumber",
-      "default": "general contractor"
-    },
-    "maxPages": {
-      "title": "Pages to crawl",
-      "type": "integer",
-      "editor": "number",
-      "description": "How many result pages to crawl (≥ 1).",
-      "default": 3
-    },
-    "cookieString": {
-      "title": "Optional cookies",
-      "type": "string",
-      "editor": "textfield",
-      "description": "Paste login cookies for sites that need auth.",
-      "default": ""
+    "profileUrls": {
+      "title": "Profile URLs",
+      "description": "List of Houzz contractor profile page URLs to scrape.",
+      "type": "array",
+      "editor": "textarea",
+      "items": { "type": "string" }
     }
   },
-  "required": ["location","keyword"]
+  "required": ["profileUrls"]
 }
