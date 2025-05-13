@@ -3,18 +3,18 @@ import { PlaywrightCrawler } from 'crawlee';
 
 await Actor.init();
 
-// Get input from the user
+// Read user input
 const {
     location = 'Cambridge, MD',
     keyword = 'general contractor',
     maxPages = 3
 } = await Actor.getInput();
 
-// Build slug for Houzz URL
+// Convert location and keyword into URL slugs
 const locationSlug = location.replace(/,\s*/g, '--').replace(/\s+/g, '-');
 const keywordSlug = keyword.replace(/\s+/g, '-').toLowerCase();
 
-// Construct Houzz search URL
+// Final Houzz search URL
 const startUrl = `https://www.houzz.com/professionals/${keywordSlug}/c/${locationSlug}`;
 
 const crawler = new PlaywrightCrawler({
@@ -24,15 +24,21 @@ const crawler = new PlaywrightCrawler({
     async requestHandler({ page, request, log }) {
         log.info(`🔍 Processing: ${request.url}`);
 
-        // Wait for network + extra time for lazy loading
+        // Wait until content loads fully
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(3000);
 
-        const items = await page.$$eval('a[href*="/professional/"]', cards => {
+        const items = await page.$$eval('[data-testid="pro-search-result"]', cards => {
             return cards.map(card => {
-                const name = card.querySelector('h3')?.innerText || null;
-                const location = card.querySelector('[data-testid="pro-location"]')?.innerText || null;
-                const profileUrl = card.href ?? null;
+                const name = card.querySelector('[data-testid="pro-name"]')?.innerText
+                          || card.querySelector('h3')?.innerText
+                          || null;
+
+                const location = card.querySelector('[data-testid="pro-location"]')?.innerText
+                               || null;
+
+                const profileUrl = card.querySelector('a')?.href || null;
+
                 return { name, location, profileUrl };
             });
         });
