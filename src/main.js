@@ -1,6 +1,5 @@
-- const Apify = require('apify');
-+ import Apify from 'apify';
-
+import Apify from 'apify';
+import { PlaywrightCrawler } from 'crawlee';
 
 Apify.main(async () => {
     // Prepare RequestList from input
